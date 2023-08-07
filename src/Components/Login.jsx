@@ -1,23 +1,56 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../Context/AuthContext";
-
+import axios from "../config/config"
+import useAuth from "../Hooks/useAuth";
+import { useLocation, useNavigate } from "react-router-dom";
 function Login() {
+  const location = useLocation();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const from = location.state?.from?.pathname || "/"  
+  const BASE_URL= "/user/login";
+  const {setAuth} = useAuth();
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const loginSubmit = async (e) => {
     e.preventDefault();
-    await login(email, password)
-      .then((res) => {
-        res.status == 200 
-          ? navigate("/home", { replace: true })
-          : console.log(res);
-      })
-      .catch((err) => console.log(err));
+    if (!email.length || !password.length) {
+      console.log("err");
+          }else{
+            try {
+              const response =  await axios.post(
+                BASE_URL,
+                JSON.stringify({
+                  email,
+                  password,
+                }),
+                {
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "http://localhost:3000",
+                    "Access-Control-Allow-Credentials": true
+
+                  },
+                  withCredentials: false,
+                }
+              );
+              if (response.data.status === 200) {
+                const accessToken = response?.data?.accessToken;
+                  setAuth({
+                    accessToken:accessToken, 
+                    email
+                  });
+                  console.log(response);
+                  navigate(from, {replace: true})
+              } else {
+                console.log(response.data)
+              }
+            } catch (error) {
+              return error
+            }
+
+          }      
+          
   };
   return (
     <div className="grid grid-cols-12">

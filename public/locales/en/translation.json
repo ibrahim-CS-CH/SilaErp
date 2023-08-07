@@ -41,5 +41,7 @@
   "deleteSupplier":"Delete Supplier",
   "addClient":"Add New Client",
   "editClient":"Edit Client",
-  "deleteClient":"Delete Client"
+  "deleteClient":"Delete Client",
+  "id": "code",
+  "createdAt":"Created At"
 }

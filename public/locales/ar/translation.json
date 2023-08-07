@@ -41,7 +41,9 @@
     "deleteSupplier":"حذف مورد",
     "addClient":"اضف عميل جديد",
     "editClient":"تعديل عميل",
-    "deleteClient":"حذف عميل"
+    "deleteClient":"حذف عميل",
+    "id":"الكود",
+    "createdAt": "تاريخ الانشاء"
     
     
 

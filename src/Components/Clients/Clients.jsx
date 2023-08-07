@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -10,21 +10,45 @@ import { Box, IconButton, TextField } from "@material-ui/core";
 import {Tooltip, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { AiFillEdit, AiFillDelete } from "react-icons/ai";
-const Clients = () => {
-  const { t } = useTranslation();
+import useAxiosPrivate from "../../Hooks/useAxiosPrivate";
 
-  function createData(name, calories, fat, carbs, protein) {
-    return { name, calories, fat, carbs, protein };
-  }
-  const rows = [
-    createData("Frozen yoghurt", 159, 6.0, 24, 4.0),
-    createData("Ice cream sandwich", 237, 9.0, 37, 4.3),
-    createData("Eclair", 262, 16.0, 24, 6.0),
-    createData("Cupcake", 305, 3.7, 67, 4.3),
-    createData("Gingerbread", 356, 16.0, 49, 3.9),
-  ];
+import { useEffect, useState } from "react";
+import useRefreshToken from "../../Hooks/useRefreshToken";
+const Clients = () => {
+ const refresh = useRefreshToken();
+
+  const { t } = useTranslation();
+  const [clients, setClients] = useState();
+  const [search, setSearch] = useState("");
+  const axiosPrivate = useAxiosPrivate();
+  useEffect(()=>{
+    let isMounted = true;
+    const control = new AbortController();
+    const getUsers = async () =>{
+      try {
+        const response = await axiosPrivate.get('/client/all',{
+          // signal: control.signal,
+          Headers:{
+            'Content-Type':"application/json"
+          },
+          withCredentials: false
+        });
+        isMounted && setClients(response.data)
+      } catch (error) {
+        console.log(error);
+        // navigate("/login", { state: {from: location}, replace: true})
+      }
+    }
+    getUsers();
+      return () =>{
+        isMounted = false;
+        control.abort();
+      }
+  }, [])
+  // const filterClients = clients && clients.filter((e)=>e.username.includes(search));
   return (
     <Box className="px-6 space-y-3 capitalize ">
+      <button onClick={()=>refresh()}>refresh</button>
       <Typography variant="h4">{t("clients")}</Typography>
       <Link
         to={"/add-client"}
@@ -33,6 +57,8 @@ const Clients = () => {
         {t("addClient")}
       </Link>
       <TextField
+        value={search}
+        onChange={(e)=>setSearch(e.target.value)}
         id="outlined-basic"
         label={t("search")}
         variant="outlined"
@@ -42,24 +68,26 @@ const Clients = () => {
         <Table sx={{ minWidth: 650 }} aria-label="simple table">
           <TableHead className="bg-slate-300 text-lg ">
             <TableRow>
+              <TableCell>{t("id")}</TableCell>
               <TableCell>{t("name")}</TableCell>
-              <TableCell>{t("email")}</TableCell>
               <TableCell>{t("phone")}</TableCell>
               <TableCell>{t("address")}</TableCell>
+              <TableCell>{t("createdAt")}</TableCell>
               <TableCell></TableCell>
             </TableRow>
           </TableHead>
           <TableBody className="">
-            {rows.map((row) => (
+            {clients && clients.map((row) => (
               <TableRow
-                key={row.name}
+                key={row.id}
                 sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
                 <TableCell component="th" scope="row">
-                  {row.name}
+                  {row.id}
                 </TableCell>
-                <TableCell>{row.calories}</TableCell>
-                <TableCell>{row.fat}</TableCell>
-                <TableCell>{row.carbs}</TableCell>
+                <TableCell>{row.username}</TableCell>
+                <TableCell>{row.phoneNumber}</TableCell>
+                <TableCell>{row.location}</TableCell>
+                <TableCell>{row.createdAt}</TableCell>
                 <TableCell >
                   <Tooltip title={t("editClient")}>
                         <IconButton >
@@ -77,7 +105,7 @@ const Clients = () => {
             ))}
           </TableBody>
         </Table>
-      </TableContainer>
+      </TableContainer> 
     </Box>
   );
 }
